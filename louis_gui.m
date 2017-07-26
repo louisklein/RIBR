@@ -105,20 +105,20 @@ set(fig.h,'UserData',fig);
 % now show the instructions
 fig = runInstructions(fig);
 pause(fig.set.inter_phase_interval)
-% *** phase instrutions *** add here
+% *** phase instructions *** add here
 % update the to-be-used list
 fig.stim.list.use = fig.stim.lp.list.use;
 fig = runStimList(fig);
 pause(fig.set.inter_phase_interval)
 
-% *** phase instrutions *** add here
+% *** phase instructions *** add here
 runInstructions(fig,'phase_two');
 % update the to-be-used list
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
 pause(fig.set.inter_phase_interval)
 
-% *** phase instrutions *** add here
+% *** phase instructions *** add here
 runInstructions(fig,'phase_three');
 fig.stim.list.use = fig.stim.fr.list.use;
 fig = runPhase3(fig,'phase_three');
@@ -311,7 +311,7 @@ set(fig.h,'UserData',fig);
 set(fig.tmp.edit_box,'Visible','on');
 fig.data.code = fig.save.code;
 fig.data.phase = phase_name;
-fig.data.phase_three_responses = [];
+fig.data.phase_two_responses = [];
 
 fig.tmp.n = numel(fig.stim.list.use);
 if ~isempty(fig.set.run_n)
@@ -353,7 +353,7 @@ for i = 1 : fig.tmp.n
             switch fig.data.response
                 case 'empty'
                     % keep waiting for a response
-                case 'quit4menow'
+                case 'quitrn'
                     delete(fig.h);
                 otherwise
                     if strcmpi(fig.data.response,fig.data.stimulus)
@@ -362,11 +362,11 @@ for i = 1 : fig.tmp.n
                     break
             end
         end
-        pause(.1);
+        pause(.0001);
     end
     fig.data.reactiontime = toc;
     tic;
-%     figure(fig.h); % stop focussing on text box
+%     figure(fig.h); % stop focusing on text box
     set(fig.tmp.edit_box,'Visible','Off');
     delete(text_handle);
     set(fig.tmp.edit_box,'String','');
@@ -376,12 +376,14 @@ for i = 1 : fig.tmp.n
     
     
     switch phase_name
+        case 'phase_two'
+            fig.data.phase_two_responses{end+1} = fig.data.response;
         case 'phase_three'
             fig.data.phase_three_responses{end+1} = fig.data.response;
     end
     while toc < fig.set.item_inter_stimulus_interval_sec
         
-        pause(.1);
+        pause(.0001);
     end
 end
 
@@ -398,7 +400,7 @@ set(fig.h,'UserData',fig);
 set(fig.tmp.edit_box,'Visible','on');
 fig.data.code = fig.save.code;
 fig.data.phase = phase_name;
-fig.data.phase_two_responses = [];
+fig.data.phase_three_responses = [];
 
 fig.tmp.n = numel(fig.stim.list.use);
 if ~isempty(fig.set.run_n)
@@ -419,7 +421,7 @@ for i = 1 : fig.tmp.n
     try
         tic;
         text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
-            strrep(fig.data.stimulus,'_','\_'),...fig.data.stimulus,...
+            strrep(fig.data.stimulus,'_','\_'),...
             'Parent',gca,'Units','Normalized',...
             'HorizontalAlignment','center',...
             'BackgroundColor',fig.set.background_colour,...
@@ -428,7 +430,6 @@ for i = 1 : fig.tmp.n
     catch err
         delete(fig.h);
         error('Axes gone!!');
-        % error('Program terminated for a specific reason')
     end
 
     set(fig.tmp.edit_box,'Visible','On');
@@ -439,7 +440,7 @@ for i = 1 : fig.tmp.n
             switch fig.data.response
                 case 'empty'
                     % keep waiting for a response
-                case 'quit4menow'
+                case 'quitrn'
                     delete(fig.h);
                 otherwise
                     if strcmpi(fig.data.response,fig.data.stimulus)
@@ -448,7 +449,7 @@ for i = 1 : fig.tmp.n
                     break
             end
         end
-        pause(.1);
+        pause(.0001);
     end
     fig.data.reactiontime = toc;
     tic;
@@ -467,7 +468,7 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.item_inter_stimulus_interval_sec
         
-        pause(.1);
+        pause(.0001);
     end
 end
 
@@ -509,10 +510,6 @@ switch phase
         end
 end
 
-fig.stim.(phase).list = [];
-%     fig.stim.(phase).list.FA1 = [];
-%     fig.stim.(phase).list.FA2 = [];
-
 for i = 1 : numel(fig.stim.(phase).headers)
     fig.stim.(phase).list.(fig.stim.(phase).headers{i}) = [];
 end
@@ -530,19 +527,41 @@ end
 %% getResponse
 function getResponse(h,event)
 
-fig = get(gcf,'UserData');
-fprintf('Response:');
-response = get(h,'String');
-response_text = sprintf('''%s'' typed into box %i',response);
+fig = get(h,'UserData');
 
-% opens a warning that displays response_text
-% warndlg(response_text,'Response!');
-
-fprintf('\t%s\n',response_text);
-fig.data.response = response;
-set(gcf,'UserData',fig);
+switch fig.phase.current
+    
+    case 'phase_two'
+        
+        fig = get(gcf,'UserData');
+        fprintf('Response:');
+        response = get(h,'String');
+        response_text = sprintf('''%s'' typed into box %i',response);
+        fprintf('\t%s\n',response_text);
+        fig.data.response = response;
+        set(gcf,'UserData',fig);
+        
+    case 'phase_three'
+        
+        fig = get(gcf,'UserData');
+        fprintf('Response:');
+        response = get(h,'String');
+        response_text = sprintf('''%s'' typed into box %i',response);
+        fprintf('\t%s\n',response_text);
+        fig.data.response = response;
+        set(gcf,'UserData',fig);
+        
+        for i = 1 : numel(fig.stim.(phase).headers)
+            fig.tmp.text_handle = text(...
+                .5,.3,fig.instruct.text{i},...
+                'HorizontalAlignment','center');
+            set(gca,'Visible','off');
+            sprintf('\t%s\n',response_text);
+            waitforbuttonpress;
+            delete(fig.tmp.text_handle);
+        end
 end
-
+end
 %% saveSetup
 function fig = saveSetup(fig)
 fig.tmp.stack = dbstack;

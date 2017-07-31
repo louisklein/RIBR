@@ -20,27 +20,28 @@
 %% setup as a function
 function  louis_gui
 % clears the command window
-% clc;
-% close all
+clc;
+close all
 
 % making a figure
 fig.set.position = [.0 .0 1.0 1.0];
-fig.set.run_n = 2; % []; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
+fig.set.run_n = []; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
 fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
-fig.set.letter_pause_sec = 1;
-fig.set.item_duration_sec = 8;
-fig.set.item_inter_stimulus_interval_sec = 3;
+fig.set.letter_pause_sec = 12;
+fig.set.item_duration_sec = 12;
+fig.set.item_inter_stimulus_interval_sec = 6;
 fig.set.inter_phase_interval = 6;
-
+fig.set.fr_timeout = 60;
 fig.set.item_xy = [.5 .7];
-
 fig.set.quit_key = '9';
 
 % toggle test mode
 fig.set.test_time = 1;
 fig.set.get_inputs = 1;
 if fig.set.test_time
+    fig.set.fr_timeout = 18;
+    fig.set.run_n = 2;
     fig.set.letter_pause_sec = .5;
     fig.set.item_duration_sec = 2;
     fig.set.item_inter_stimulus_interval_sec = 1;
@@ -74,7 +75,7 @@ fig.stim.rp.n_list = mod(str2double(fig.save.code),numel(fig.stim.rp.fields))+1;
 fig.stim.rp.list.use = fig.stim.rp.list.(fig.stim.rp.fields{fig.stim.rp.n_list});
 
 fig.stim.lp.fields = fields(fig.stim.lp.list);
-fig.stim.lp.n_list = ceil(fig.stim.rp.n_list/4); 
+fig.stim.lp.n_list = ceil(fig.stim.rp.n_list/4);
 fig.stim.lp.list.use = fig.stim.lp.list.(fig.stim.lp.fields{fig.stim.lp.n_list});
 
 fig.stim.fr.fields = fields(fig.stim.fr.list);
@@ -93,13 +94,14 @@ fig.h = figure(...
 
 fig.tmp.edit_box = uicontrol('Parent',fig.h,'Style','Edit',...
     'units','normalized',...
-    'FontName', 'Cambria',...
+    'FontName', 'Calibri',...
     'FontSize', 16,...
     'Position',[.4 .45 .2 .05],... % sets the position as a division of the figure size
     'CallBack',@getResponse,...
     'Tag','box',....
     'UserData',1,'Visible','off');
 
+set(fig.h, 'Pointer', 'custom', 'PointerShapeCData', NaN(16,16))
 set(fig.h,'UserData',fig);
 
 % now show the instructions
@@ -109,20 +111,20 @@ pause(fig.set.inter_phase_interval)
 % update the to-be-used list
 fig.stim.list.use = fig.stim.lp.list.use;
 fig = runStimList(fig);
-pause(fig.set.inter_phase_interval)
+% pause(fig.set.inter_phase_interval)
 
 % *** phase instructions *** add here
 runInstructions(fig,'phase_two');
 % update the to-be-used list
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
-pause(fig.set.inter_phase_interval)
+% pause(fig.set.inter_phase_interval)
 
 % *** phase instructions *** add here
 runInstructions(fig,'phase_three');
 fig.stim.list.use = fig.stim.fr.list.use;
 fig = runPhase3(fig,'phase_three');
-pause(fig.set.inter_phase_interval)
+% pause(fig.set.inter_phase_interval)
 
 % *** Complete - thank you! *** add here
 runInstructions(fig,'finish');
@@ -134,44 +136,25 @@ end
 %% myColours
 % - list of colours I might want to use
 function col = myColours
-col.black = [.05 .05 .05];
+col.black = [.1 .1 .1];
 col.blue = [.3 .3 .8];
 col.grey = [.99 .99 .99];
+col.greytext = [.95 .95 .95];
 end
 
 %% getKeyPress
 function getKeyPress(h,event_data)
 fig = get(h,'UserData');
-%fprintf('\tKey pressed!!\n');
+% fig.data.keypress = toc;
 
 switch event_data.Key
-    case [],...
-        {'0','1','2'};
-        switch fig.phase.current
-            case {''}
-                delete(get(gca,'Children'));
-                switch event_data.Key
-                    case '0'
-                        runInstructions(fig);
-                    case '1'
-                        fig = runStimList(fig);
-                    case '2'
-                        fig = runPhase2(fig,'phase_two');
-                    case '3'
-                        fig = runPhase2(fig,'phase_three');
-                end
-            otherwise
-                fprintf('I''m running %s, please wait until it''s finished or hit ''%s'' to quit\n',fig.phase.current,fig.set.quit_key);
-                set(fig.h,'Name',sprintf('Running: %s',fig.phase.current));
-        end
+    case []
     case fig.set.quit_key
         delete(fig.h);
     otherwise
-        fprintf('The ''%s'' key doesn''t do anything, yet...\n', event_data.Key)
+        fprintf('''%s'' key pressed\n', event_data.Key)
 end
 set(h,'UserData',fig);
-% pause(fig.set.letter_pause_sec);
-% delete(text_handle);
 end
 
 %%  runInstructions
@@ -185,30 +168,29 @@ fig.instruct.texts = {...
     {'In the first phase of the experiment you will be presented with a series of statements on the screen.',... % instruction 1: line 1
     'Each statement will appear for several seconds before disappearing, so it is important that you pay close attention.',... % instruction 1: line 2
     'You need to read each statement carefully while it is on the screen.'},... % instruction 1: line 3
+    
     {'We are subtly manipulating the brightness of each statement, however these changes should be difficult for you to detect. '... % instruction 2: line 1
     }...
+    
     {'You are now ready to start the experiment'} ...
-%     {'Press ''0'' to see instructions again',...
-%     'Press ''1'' to run phase 1',...
-%     'Press ''2'' to run phase 2'} ...
     };
+
 if exist('in_phase','var') && ~isempty(in_phase)
     switch in_phase
         case 'phase_two'
             fig.instruct.texts = {...
-                {'Here comes phase 2!'},... % instruction 1: line 1
+                {'Here comes the next phase'},...
+                {'Remember to type the full sentence when you recall the blanked-out word'},...
                 };
+            
         case 'phase_three'
             fig.instruct.texts = {...
-                {'Here comes phase 3!'},... % instruction 1: line 1
+                {'Here comes the final phase'},... % instruction 1: line 1
                 };
-%         case 'phase_final'
-%             fig.instruct.texts = {...
-%                 {'Here comes final phase'},...
-%                 };
+
         case 'finish'
             fig.instruct.texts = {...
-                {'That''s all folks!','Thank you :)'},... % instruction 1: line 1
+                {'You''re all finished!','Thank you for participating!'},... % instruction 1: line 1
                 };
             
     end
@@ -225,25 +207,22 @@ for i = 1 : numel(fig.instruct.texts)
         fig.instruct.texts{i}{:},fig.instruct.continue);
 end
 
-% fig.instruct.text = {... sprintf('%s\n\n%s',fig.instruct.texts{1},fig.instruct.continue),...
-%     sprintf([repmat('%s\n\n',1,numel(fig.instruct.texts{1})),fig.instruct.continue_format],... % create formatting string
-%     fig.instruct.texts{1}{:},fig.instruct.continue),...
-%     sprintf([repmat('%s\n\n',1,numel(fig.instruct.texts{2})),fig.instruct.continue_format],...
-%     fig.instruct.texts{2}{:},fig.instruct.continue),... sprintf('%s\n\n%s',fig.instruct.texts{2},fig.instruct.continue),...
-%     sprintf(['Press ''0'' to see instructions again\n',...
-%     'Press ''1'' to run phase 1\n',...
-%     'Press ''2'' to run phase 2'])};
 set(fig.h,'UserData',fig);
+figure(gcf);
 for i = 1 : numel(fig.instruct.text)
-%     fig.phase.running = 1;
+    
     fig.tmp.text_handle = text(...
         .5,.5,fig.instruct.text{i},...
-        'HorizontalAlignment','center');
+        'HorizontalAlignment','center',...
+        'Color',fig.col.black,...
+        'FontSize',25,...
+        'FontName','Calibri');
+    
     set(gca,'Visible','off');
-%     if i < numel(fig.instruct.text)
-        waitforbuttonpress; %(fig.h);
-        delete(fig.tmp.text_handle);
-%     end
+    
+    waitforbuttonpress;
+    delete(fig.tmp.text_handle);
+    
 end
 fig.phase.current = '';
 set(fig.h,'UserData',fig);
@@ -261,12 +240,6 @@ makeaxes = gca(fig.h);
 set(makeaxes,'Parent', fig.h,...
     'Position',[.1 .1 .8 .8],...
     'Visible','off');
-% ...
-%     'PlotBoxAspectRatioMode','manual',...
-%     'PlotBoxAspectRatio',[1,1,1],...
-%     'DataAspectRatioMode','manual',...
-%     'DataAspectRatio',[1 1 1],...
-%     'Visible','on');
 
 % checks that the correct directory is being read
 if isfield(fig,'stim') && isfield(fig.stim,'list') && isfield(fig.stim.list,'use')
@@ -278,17 +251,18 @@ if isfield(fig,'stim') && isfield(fig.stim,'list') && isfield(fig.stim.list,'use
         fprintf('\t%i: %s\n',i,fig.stim.list.use{i});
         try
             text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
-                strrep(fig.stim.list.use{i},'_','\_'),...fig.stim.list.use{i},...
+                strrep(fig.stim.list.use{i},'_','\_'),...
                 'Parent',makeaxes,'Units','Normalized',...
                 'HorizontalAlignment','center',...
                 'BackgroundColor',fig.set.background_colour,...
-                'Color',fig.col.black,...
+                'Color',fig.col.greytext,...
                 'Visible','on',...
-                'FontSize',25,'FontName','Cambria');
+                'FontSize',50,...
+                'FontName','See');
         catch err
             delete(fig.h);
             error('Axes gone!!');
-            % error('Program terminated for a specific reason')
+            
         end
         pause(fig.set.item_duration_sec);
         delete(text_handle);
@@ -320,12 +294,10 @@ end
 for i = 1 : fig.tmp.n
     fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     
-%     fig.save.headers = {'code','trial','stimulus','reactiontime','response'};
-    
     fig.data.trial = i;
     phase_name = 'phase_two';
     fig.data.stimulus = fig.stim.list.use{i};
-
+    
     fig.data.reactiontime = -9999;
     fig.data.response = 'empty';
     fig.data.correct = 0;
@@ -333,19 +305,19 @@ for i = 1 : fig.tmp.n
     try
         tic;
         text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
-            strrep(fig.data.stimulus,'_','\_'),...fig.data.stimulus,...
+            strrep(fig.data.stimulus,'_','\_'),...
             'Parent',gca,'Units','Normalized',...
             'HorizontalAlignment','center',...
             'BackgroundColor',fig.set.background_colour,...
-            'Color',fig.col.black,...
-            'FontSize',25,'FontName','Cambria');
+            'Color',fig.col.greytext,...
+            'FontSize',25,'FontName','See');
     catch err
         delete(fig.h);
         error('Axes gone!!');
-        % error('Program terminated for a specific reason')
+        
     end
-
-    set(fig.tmp.edit_box,'Visible','On');
+    
+    set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
     while 1
         fig = get(fig.h,'UserData');
@@ -353,7 +325,7 @@ for i = 1 : fig.tmp.n
             switch fig.data.response
                 case 'empty'
                     % keep waiting for a response
-                case 'quitrn'
+                case 'quit'
                     delete(fig.h);
                 otherwise
                     if strcmpi(fig.data.response,fig.data.stimulus)
@@ -362,15 +334,16 @@ for i = 1 : fig.tmp.n
                     break
             end
         end
-        pause(.0001);
+        pause(.001);
     end
     fig.data.reactiontime = toc;
     tic;
-%     figure(fig.h); % stop focusing on text box
+    % stop focusing on text box
+    set(fig.tmp.edit_box,'Enable','off');
     set(fig.tmp.edit_box,'Visible','Off');
     delete(text_handle);
     set(fig.tmp.edit_box,'String','');
-
+    
     % save the data
     fig = saveData(fig);
     
@@ -383,7 +356,7 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.item_inter_stimulus_interval_sec
         
-        pause(.0001);
+        pause(.001);
     end
 end
 
@@ -409,8 +382,6 @@ end
 for i = 1 : fig.tmp.n
     fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     
-%     fig.save.headers = {'code','trial','stimulus','reactiontime','response'};
-    
     fig.data.trial = i;
     phase_name = 'phase_three';
     fig.data.stimulus = fig.stim.list.use{i};
@@ -425,39 +396,34 @@ for i = 1 : fig.tmp.n
             'Parent',gca,'Units','Normalized',...
             'HorizontalAlignment','center',...
             'BackgroundColor',fig.set.background_colour,...
-            'Color',fig.col.black,...
-            'FontSize',25,'FontName','Cambria');
+            'Color',fig.col.greytext,...
+            'FontSize',25,'FontName','See');
     catch err
         delete(fig.h);
         error('Axes gone!!');
     end
-
-    set(fig.tmp.edit_box,'Visible','On');
+    
+    set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
-    while 1
-        fig = get(fig.h,'UserData');
-        if isfield(fig,'data')
-            switch fig.data.response
-                case 'empty'
-                    % keep waiting for a response
-                case 'quitrn'
-                    delete(fig.h);
-                otherwise
-                    if strcmpi(fig.data.response,fig.data.stimulus)
-                        fig.data.correct = 1;
-                    end
-                    break
-            end
+    if isfield(fig.data,'responses')
+        fig.data = rmfield(fig.data,'responses');
+    end
+    set(fig.h,'UserData',fig);
+    while toc < fig.set.fr_timeout
+        pause(.001);
+    end
+    fig = get(fig.h,'UserData');
+    if isfield(fig.data,'text_handle')
+        for j = 1 : numel(fig.data.text_handle)
+            delete(fig.data.text_handle(j));
         end
-        pause(.0001);
     end
     fig.data.reactiontime = toc;
     tic;
-%     figure(fig.h); % stop focussing on text box
-    set(fig.tmp.edit_box,'Visible','Off');
+    
+    set(fig.tmp.edit_box,'Enable','off','Visible','Off');
     delete(text_handle);
-    set(fig.tmp.edit_box,'String','');
-
+    
     % save the data
     fig = saveData(fig);
     
@@ -468,7 +434,7 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.item_inter_stimulus_interval_sec
         
-        pause(.0001);
+        pause(.001);
     end
 end
 
@@ -489,21 +455,16 @@ while ~isempty(remaining_text)
     [fig.stim.(phase).headers{end+1},remaining_text] = strtok(remaining_text,',');
 end
 
+% strips miscellaneous characters from strings
 switch phase
     case 'rp'
-        % first three characters are causing us issues - we've no idea
-        % where they've come from and hate them! This will remove them.
         while ~strcmpi(fig.stim.(phase).headers{1}(1),'F')
             fig.stim.(phase).headers{1}(1) = [];
         end
     case 'lp'
-        % first three characters are causing us issues - we've no idea
-        % where they've come from and hate them! This will remove them.
         while ~strcmpi(fig.stim.(phase).headers{1}(1),'F')
             fig.stim.(phase).headers{1}(1) = [];
         end
-        % added another case for the Final_Recall phase hashtag may not
-        % work as intended
     case 'fr'
         while ~strcmpi(fig.stim.(phase).headers{1}(1),'F')
             fig.stim.(phase).headers{1}(1) = [];
@@ -525,15 +486,14 @@ fprintf('\tdone.\n');
 end
 
 %% getResponse
-function getResponse(h,event)
+function getResponse(h,~)
 
-fig = get(h,'UserData');
+fig = get(gcf,'UserData');
 
 switch fig.phase.current
     
-    case 'phase_two'
+    case 'runPhase2'
         
-        fig = get(gcf,'UserData');
         fprintf('Response:');
         response = get(h,'String');
         response_text = sprintf('''%s'' typed into box %i',response);
@@ -541,25 +501,32 @@ switch fig.phase.current
         fig.data.response = response;
         set(gcf,'UserData',fig);
         
-    case 'phase_three'
+    case 'runPhase3'
         
-        fig = get(gcf,'UserData');
         fprintf('Response:');
         response = get(h,'String');
+        set(h,'String',''); % clear the string
+        drawnow;
         response_text = sprintf('''%s'' typed into box %i',response);
         fprintf('\t%s\n',response_text);
         fig.data.response = response;
-        set(gcf,'UserData',fig);
-        
-        for i = 1 : numel(fig.stim.(phase).headers)
-            fig.tmp.text_handle = text(...
-                .5,.3,fig.instruct.text{i},...
-                'HorizontalAlignment','center');
-            set(gca,'Visible','off');
-            sprintf('\t%s\n',response_text);
-            waitforbuttonpress;
-            delete(fig.tmp.text_handle);
+        if ~isfield(fig.data,'responses')
+            fig.data.responses = [];
+            fig.data.text_handle = [];
         end
+        fig.data.responses{end+1} = fig.data.response;
+        
+        i = numel(fig.data.responses);
+        fig.data.text_handle(i) = text(...
+            .5,.3-.05*(i-1),fig.data.responses{i},...
+            'HorizontalAlignment','center',...
+            'Color',fig.col.black,...
+            'FontSize',20,'FontName','Calibri');
+        set(gca,'Visible','off');
+        sprintf('\t%s\n',response_text);
+        
+        drawnow;
+        set(gcf,'UserData',fig);
 end
 end
 %% saveSetup
@@ -594,7 +561,7 @@ while 1
     fig.save.number = fig.save.number + 1;
     fig.save.file_name = sprintf('%s_%s%i.dat',fig.save.code,fig.save.task_name,fig.save.number);
     fig.save.fullfile = fullfile(fig.save.dir,fig.save.file_name);
- 
+    
     if ~exist(fig.save.fullfile,'file')
         break
     end
@@ -613,8 +580,8 @@ for i = 1 : numel(fig.save.headers)
     end
 end
 
-% since the for loop has written in headers to the file, fclose terminates
-% 'w' access for fid
+% since the for loop has written in headers to the file
+% fclose terminates 'w' access for fid
 fclose(fid);
 
 end
@@ -626,21 +593,34 @@ function fig = saveData(fig)
 fid = fopen(fig.save.fullfile,'a');
 fig.tmp.delim = '\t';
 
-for i = 1 : numel(fig.save.headers)
-    fig.tmp.data = fig.data.(fig.save.headers{i});
-    fig.tmp.format = '%s';
-    if isnumeric(fig.tmp.data)
-        fig.tmp.format = '%i';
-        if floor(fig.tmp.data) < fig.tmp.data
-            fig.tmp.format = '%3.2f';
-        end
-    end
-    if i == numel(fig.save.headers)
-        fig.tmp.delim = '\n';
-    end
-    fprintf(fid,[fig.tmp.format,fig.tmp.delim],fig.tmp.data);
+fig.tmp.responses = fig.data.response;
+if isfield(fig.data,'responses') && ~isempty(fig.data.responses)
+    fig.tmp.responses = fig.data.responses;
 end
-
+for j = 1 : numel(fig.tmp.responses)
+    for i = 1 : numel(fig.save.headers)
+        switch fig.save.headers{i}
+            case 'response'
+                if iscell(fig.tmp.responses)
+                    fig.data.response = fig.tmp.responses{j};
+                else
+                    fig.data.response = fig.tmp.responses;
+                end
+        end
+        fig.tmp.data = fig.data.(fig.save.headers{i});
+        fig.tmp.format = '%s';
+        if isnumeric(fig.tmp.data)
+            fig.tmp.format = '%i';
+            if floor(fig.tmp.data) < fig.tmp.data
+                fig.tmp.format = '%3.2f';
+            end
+        end
+        if i == numel(fig.save.headers)
+            fig.tmp.delim = '\n';
+        end
+        fprintf(fid,[fig.tmp.format,fig.tmp.delim],fig.tmp.data);
+    end
+end
 fclose(fid);
 
 end
@@ -649,7 +629,7 @@ function closeGui(~,~)
 
 fprintf('Closing Gui: saving diary file\n');
 diary off
-% error('Yep, I''m closing...');
+
 return
 end
 

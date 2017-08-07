@@ -30,8 +30,8 @@ fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
 fig.set.letter_pause_sec = 12;
 fig.set.item_duration_sec = 12;
-fig.set.item_inter_stimulus_interval_sec = 6;
-fig.set.inter_phase_interval = 6;
+fig.set.item_inter_stimulus_interval_sec = 3;
+fig.set.inter_phase_interval = 10;
 fig.set.fr_timeout = 60;
 fig.set.item_xy = [.5 .7];
 fig.set.quit_key = '9';
@@ -104,29 +104,26 @@ fig.tmp.edit_box = uicontrol('Parent',fig.h,'Style','Edit',...
 set(fig.h, 'Pointer', 'custom', 'PointerShapeCData', NaN(16,16))
 set(fig.h,'UserData',fig);
 
-% now show the instructions
+% runs initial instructions
 fig = runInstructions(fig);
-pause(fig.set.inter_phase_interval)
-% *** phase instructions *** add here
-% update the to-be-used list
+% runs first phase stimulus list
 fig.stim.list.use = fig.stim.lp.list.use;
 fig = runStimList(fig);
-% pause(fig.set.inter_phase_interval)
+pause(fig.set.inter_phase_interval)
 
-% *** phase instructions *** add here
+% runs second phase instructions
 runInstructions(fig,'phase_two');
-% update the to-be-used list
+% runs second phase stimulus list
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
-% pause(fig.set.inter_phase_interval)
 
-% *** phase instructions *** add here
+% runs final phase instructions
 runInstructions(fig,'phase_three');
+% runs final phase stimulus list
 fig.stim.list.use = fig.stim.fr.list.use;
 fig = runPhase3(fig,'phase_three');
-% pause(fig.set.inter_phase_interval)
 
-% *** Complete - thank you! *** add here
+% thanks participants and close program
 runInstructions(fig,'finish');
 delete(fig.h);
 
@@ -163,14 +160,14 @@ fig.tmp.stack = dbstack;
 fig.phase.current = fig.tmp.stack(1).name;
 
 fig.instruct.continue = 'Press ''Space Bar'' to continue.';
-fig.instruct.continue_format = '\n\n%s';
+fig.instruct.continue_format = '\n%s';
 fig.instruct.texts = {...
     {'In the first phase of the experiment you will be presented with a series of statements on the screen.',... % instruction 1: line 1
     'Each statement will appear for several seconds before disappearing, so it is important that you pay close attention.',... % instruction 1: line 2
     'You need to read each statement carefully while it is on the screen.'},... % instruction 1: line 3
     
-    {'We are subtly manipulating the brightness of each statement, however these changes should be difficult for you to detect. '... % instruction 2: line 1
-    }...
+    {'We are subtly manipulating the brightness of each statement.'... % instruction 2: line 1
+    'These changes, however, should be very difficult for you to detect.'}...
     
     {'You are now ready to start the experiment'} ...
     };
@@ -255,10 +252,10 @@ if isfield(fig,'stim') && isfield(fig.stim,'list') && isfield(fig.stim.list,'use
                 'Parent',makeaxes,'Units','Normalized',...
                 'HorizontalAlignment','center',...
                 'BackgroundColor',fig.set.background_colour,...
-                'Color',fig.col.greytext,...
+                'Color',fig.col.black,...
                 'Visible','on',...
                 'FontSize',50,...
-                'FontName','See');
+                'FontName','Calibri');
         catch err
             delete(fig.h);
             error('Axes gone!!');
@@ -269,7 +266,7 @@ if isfield(fig,'stim') && isfield(fig.stim,'list') && isfield(fig.stim.list,'use
         pause(fig.set.item_inter_stimulus_interval_sec)
     end
 else
-    warndlg('Can''t find list!!');
+    warndlg('Can''t find stimulus list!!');
 end
 fprintf('Finished\n');
 fig.phase.current = '';
@@ -309,8 +306,8 @@ for i = 1 : fig.tmp.n
             'Parent',gca,'Units','Normalized',...
             'HorizontalAlignment','center',...
             'BackgroundColor',fig.set.background_colour,...
-            'Color',fig.col.greytext,...
-            'FontSize',25,'FontName','See');
+            'Color',fig.col.black,...
+            'FontSize',25,'FontName','Calibri');
     catch err
         delete(fig.h);
         error('Axes gone!!');
@@ -396,8 +393,8 @@ for i = 1 : fig.tmp.n
             'Parent',gca,'Units','Normalized',...
             'HorizontalAlignment','center',...
             'BackgroundColor',fig.set.background_colour,...
-            'Color',fig.col.greytext,...
-            'FontSize',25,'FontName','See');
+            'Color',fig.col.black,...
+            'FontSize',25,'FontName','Calibri');
     catch err
         delete(fig.h);
         error('Axes gone!!');

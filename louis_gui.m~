@@ -120,15 +120,9 @@ pause(fig.set.phase_buffer);
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
 
-
 tic
-pause(fig.set.distractor_task);
 playSnake(fig,'distractor');
-distractor_task = toc;
-toc
-if toc <= fig.set.distractor_task
-    playSnake(fig,'distractor');
-end
+pause(fig.set.distractor_task);
 
 % runInstructions(fig,'distractor');
 % pause(fig.set.distractor_task)

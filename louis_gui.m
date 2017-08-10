@@ -41,12 +41,12 @@ fig.set.quit_key = '9';
 fig.set.test_time = 1;
 fig.set.get_inputs = 1;
 if fig.set.test_time
-    fig.set.fr_timeout = 18;
-    fig.set.run_n = 2;
-    fig.set.item_duration_sec = 2;
-    fig.set.inter_stimulus_interval = 1;
-    fig.set.phase_buffer = 1;
-    fig.set.distractor_task = 20;
+    fig.set.fr_timeout = 5;
+    fig.set.run_n = 1;
+    fig.set.item_duration_sec = 0.5;
+    fig.set.inter_stimulus_interval = 0.5;
+    fig.set.phase_buffer = 0.5;
+    fig.set.distractor_task = 0.5;
 end
 %% read in stim file
 
@@ -120,15 +120,8 @@ pause(fig.set.phase_buffer);
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
 
-
-tic
-pause(fig.set.distractor_task);
-playSnake(fig,'distractor');
-distractor_task = toc;
-toc
-if toc <= fig.set.distractor_task
-    playSnake(fig,'distractor');
-end
+fig = runDistractor(fig,'distractor');
+pause(fig.set.phase_buffer);
 
 % runInstructions(fig,'distractor');
 % pause(fig.set.distractor_task)
@@ -341,16 +334,17 @@ if ~isempty(fig.set.run_n)
     fig.tmp.n = fig.set.run_n;
 end
 for i = 1 : fig.tmp.n
+    
     fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     
     fig.data.trial = i;
     phase_name = 'phase_two';
     fig.data.stimulus = fig.stim.list.use{i};
-    
     fig.data.reactiontime = -9999;
     fig.data.response = 'empty';
     fig.data.correct = 0;
     set(fig.h,'UserData',fig);
+    
     try
         tic;
         text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
@@ -383,7 +377,7 @@ for i = 1 : fig.tmp.n
                     break
             end
         end
-        pause(.001);
+        pause(.0001);
     end
     fig.data.reactiontime = toc;
     tic;
@@ -405,7 +399,7 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.inter_stimulus_interval
         
-        pause(.001);
+        pause(.0001);
     end
 end
 
@@ -459,7 +453,7 @@ for i = 1 : fig.tmp.n
     end
     set(fig.h,'UserData',fig);
     while toc < fig.set.fr_timeout
-        pause(.001);
+        pause(.0001);
     end
     fig = get(fig.h,'UserData');
     if isfield(fig.data,'text_handle')
@@ -483,7 +477,27 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.inter_stimulus_interval
         
-        pause(.001);
+        pause(.0001);
+    end
+end
+
+fig.phase.current = '';
+end
+
+%% distractor
+
+function fig = runDistractor(fig,~)
+
+fig.set.phase_name = 'distractor';
+
+tic
+pause(fig.set.distractor_task);
+while toc < fig.set.distractor_task
+    playSnake(fig,'distractor');
+    try
+        fig.set.distractor_task = toc;
+    catch err
+        break
     end
 end
 
@@ -559,7 +573,7 @@ switch fig.phase.current
         response_text = sprintf('''%s'' typed into box %i',response);
         fprintf('\t%s\n',response_text);
         fig.data.response = response;
-%         fig.data.reactiontime = toc;
+
         if ~isfield(fig.data,'responses')
             fig.data.responses = [];
             fig.data.text_handle = [];

@@ -38,7 +38,7 @@ set(fig.h,'KeyPressFcn',@keyPress);
 %% Called for any key press.
     function keyPress (~,evt)
         youGottaMove(evt.Key);
-        
+
         while(~gameover)
             pause(0.1);
             youGottaMove(evt.Key);
@@ -49,9 +49,9 @@ set(fig.h,'KeyPressFcn',@keyPress);
     function youGottaMove(mov)
         makeMovement(mov);
         
-%         if ~gameover    
+        if ~gameover    
             checkBody();
-%             if ~gameover
+            if ~gameover
                 justGotFoodFlag = 0;
 
                 grid(positionX(1),positionY(1)) = 0;
@@ -70,8 +70,8 @@ set(fig.h,'KeyPressFcn',@keyPress);
 
                 grid(x,y) = 1;
                 set(fig.h,'CurrentObject',imagesc(grid));
-%             end
-%         end
+            end
+        end
     end
     
 %% Moves the position of the snake in direction of 'mov' (key)
@@ -80,28 +80,28 @@ set(fig.h,'KeyPressFcn',@keyPress);
         while tmp
             switch(mov)
                 case 'downarrow'
-%                     if (x==xmax)
-%                         gameOver();
-%                         break;
-%                     end
+                    if (x==xmax)
+                        gameOver();
+                        break;
+                    end
                     x=x+1;
                 case 'uparrow'
-%                     if (x==1)
-%                         gameOver();
-%                         break;
-%                     end
+                    if (x==1)
+                        gameOver();
+                        break;
+                    end
                     x=x-1;
                 case 'rightarrow'
-%                     if (y==ymax)
-%                         gameOver();
-%                         break;
-%                     end
+                    if (y==ymax)
+                        gameOver();
+                        break;
+                    end
                     y=y+1;
                 case 'leftarrow'
-%                     if (y==1)
-%                         gameOver();
-%                         break;
-%                     end
+                    if (y==1)
+                        gameOver();
+                        break;
+                    end
                     y=y-1;
             end
         tmp = 0;    
@@ -158,7 +158,7 @@ set(fig.h,'KeyPressFcn',@keyPress);
        set(fig.h,'CurrentObject',imagesc(grid));
        pause(1);
 %        close (fig.h);
-%        disp('Game over, you suck!');
+       disp('Gameover, maaaan!');
        gameover = 1;
     end
 

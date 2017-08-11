@@ -1,6 +1,11 @@
 %% playSnake;
-function fig = playSnake(fig,~)
+function fig = playSnake(fig)
 
+testing = 0;
+if ~exist('fig','var') || isempty(fig)
+    testing = 1;
+    fig.h = figure;
+end
 %Size of the 'playing field'.
 xmax = 40;
 ymax = 40;
@@ -160,6 +165,9 @@ set(fig.h,'KeyPressFcn',@keyPress);
 %        close (fig.h);
        disp('Gameover, maaaan!');
        gameover = 1;
+       if testing
+           delete(fig.h);
+       end
     end
 
 end

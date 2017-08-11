@@ -25,7 +25,7 @@ function  louis_gui
 
 % making a figure
 fig.set.position = [.0 .0 1.0 1.0];
-fig.set.run_n = []; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
+fig.set.run_n = 2; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
 fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
 fig.set.item_duration_sec = 8;
@@ -34,6 +34,7 @@ fig.set.inter_stimulus_interval = 2;
 fig.set.phase_buffer = 6;
 fig.set.distractor_task = 240;
 fig.set.fr_timeout = 120;
+fig.set.rp_timeout = 16;
 fig.set.item_xy = [.5 .7];
 fig.set.quit_key = '9';
 
@@ -42,11 +43,12 @@ fig.set.test_time = 1;
 fig.set.get_inputs = 1;
 if fig.set.test_time
     fig.set.fr_timeout = 5;
+    fig.set.rp_timeout = 5;
     fig.set.run_n = 1;
     fig.set.item_duration_sec = 0.5;
     fig.set.inter_stimulus_interval = 0.5;
     fig.set.phase_buffer = 0.5;
-    fig.set.distractor_task = 20;
+    fig.set.distractor_task = 0.5;
 end
 %% read in stim file
 
@@ -120,17 +122,8 @@ pause(fig.set.phase_buffer);
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
 
-tic
-pause(fig.set.distractor_task);
-for toc < fig.set.distractor_task
-    playSnake(fig,'distractor');
-    try
-        distractor_task = toc;
-    
-end
-
-
-
+fig = runDistractor(fig,'distractor');
+pause(fig.set.phase_buffer);
 
 % runInstructions(fig,'distractor');
 % pause(fig.set.distractor_task)
@@ -343,16 +336,18 @@ if ~isempty(fig.set.run_n)
     fig.tmp.n = fig.set.run_n;
 end
 for i = 1 : fig.tmp.n
+    
     fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     
     fig.data.trial = i;
     phase_name = 'phase_two';
-    fig.data.stimulus = fig.stim.list.use{i};
-    
+    fig.data.answer = fig.stim.list.use{i}; 
+    fig.data.stimulus = fig.data.answer; % needs to be tweaked - second word needs to be adjusted
     fig.data.reactiontime = -9999;
     fig.data.response = 'empty';
     fig.data.correct = 0;
     set(fig.h,'UserData',fig);
+    
     try
         tic;
         text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
@@ -370,7 +365,8 @@ for i = 1 : fig.tmp.n
     
     set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
-    while 1
+    incorrect_response = 0;
+    while toc < fig.set.rp_timeout && incorrect_response
         fig = get(fig.h,'UserData');
         if isfield(fig,'data')
             switch fig.data.response
@@ -379,15 +375,48 @@ for i = 1 : fig.tmp.n
                 case 'quit'
                     delete(fig.h);
                 otherwise
-                    if strcmpi(fig.data.response,fig.data.stimulus)
-                        fig.data.correct = 1;
+                    % validate response
+                    if numel(fig.data.response)
+                        if and(~incorrect_response,... % or hasn't timed out
+                                and(~isempty(strfind(fig.data.response,'all ')),...
+                                ~isempty(strfind(fig.data.response,' are ')))) ...
+                                || and(incorrect_response,strcmpi(fig.data.response,fig.data.answer))
+                            % and score response
+                            if strcmpi(fig.data.response,fig.data.answer)
+                                fig.data.correct = 1;
+                            end
+                            break
+                        else
+                            tic; % restart for wrong response
+                            fig.data.response = 'empty';
+                            set(fig.tmp.edit_box,'String','!!!');
+                        end
                     end
-                    break
             end
         end
-        pause(.001);
+        pause(.0001);
+        if toc >= fig.set.rp_timeout
+            incorrect_response = 1;
+            fig.tmp.mentions_in_list = find(ismember(fig.stim.list.use,fig.data.answer));
+            if i == fig.tmp.mentions_in_list(1)
+                % present the correct answer
+                text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
+                    fig.data.answer,...
+                    'Parent',gca,'Units','Normalized',...
+                    'HorizontalAlignment','center',...
+                    'BackgroundColor',fig.set.background_colour,...
+                    'Color',fig.col.black,...
+                    'FontSize',25,'FontName','Calibri');
+                
+            end
+        end
     end
-    fig.data.reactiontime = toc;
+    switch phase_name
+        case 'phase_two'
+            fig.data.reactiontime = toc;
+    end
+    
+    
     tic;
     % stop focusing on text box
     set(fig.tmp.edit_box,'Enable','off');
@@ -407,7 +436,7 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.inter_stimulus_interval
         
-        pause(.001);
+        pause(.0001);
     end
 end
 
@@ -461,7 +490,7 @@ for i = 1 : fig.tmp.n
     end
     set(fig.h,'UserData',fig);
     while toc < fig.set.fr_timeout
-        pause(.001);
+        pause(.0001);
     end
     fig = get(fig.h,'UserData');
     if isfield(fig.data,'text_handle')
@@ -469,7 +498,7 @@ for i = 1 : fig.tmp.n
             delete(fig.data.text_handle(j));
         end
     end
-    fig.data.reactiontime = toc;
+%     fig.data.reactiontime = toc;
     tic;
     
     set(fig.tmp.edit_box,'Enable','off','Visible','Off');
@@ -485,7 +514,27 @@ for i = 1 : fig.tmp.n
     end
     while toc < fig.set.inter_stimulus_interval
         
-        pause(.001);
+        pause(.0001);
+    end
+end
+
+fig.phase.current = '';
+end
+
+%% distractor
+
+function fig = runDistractor(fig,~)
+
+fig.set.phase_name = 'distractor';
+
+tic
+pause(fig.set.distractor_task);
+while toc < fig.set.distractor_task
+    playSnake(fig,'distractor');
+    try
+        fig.set.distractor_task = toc;
+    catch err
+        break
     end
 end
 
@@ -555,18 +604,21 @@ switch fig.phase.current
     case 'runPhase3'
         
         fprintf('Response:');
+        
         response = get(h,'String');
         set(h,'String',''); % clear the string
         drawnow;
         response_text = sprintf('''%s'' typed into box %i',response);
         fprintf('\t%s\n',response_text);
         fig.data.response = response;
-%         fig.data.reactiontime = toc;
+
         if ~isfield(fig.data,'responses')
             fig.data.responses = [];
             fig.data.text_handle = [];
+            fig.data.reactiontimes = [];
         end
         fig.data.responses{end+1} = fig.data.response;
+        fig.data.reactiontimes{end+1} = toc;
         
         i = numel(fig.data.responses);
         fig.data.text_handle(i) = text(...
@@ -645,20 +697,25 @@ function fig = saveData(fig)
 fid = fopen(fig.save.fullfile,'a');
 fig.tmp.delim = '\t';
 
-fig.tmp.responses = fig.data.response;
+if ~iscell(fig.data.response)
+    fig.tmp.responses{1} = fig.data.response;
+    fig.tmp.reactiontimes{1} = fig.data.reactiontime;
+end
 if isfield(fig.data,'responses') && ~isempty(fig.data.responses)
     fig.tmp.responses = fig.data.responses;
+    fig.tmp.reactiontimes = fig.data.reactiontimes;
 end
+
 for j = 1 : numel(fig.tmp.responses)
     fig.tmp.delim = '\t';
     for i = 1 : numel(fig.save.headers)
         switch fig.save.headers{i}
-            case 'response'
-                if iscell(fig.tmp.responses)
-                    fig.data.response = fig.tmp.responses{j};
-                else
-                    fig.data.response = fig.tmp.responses;
-                end
+            case {'response','reactiontime'}
+%                 if iscell(fig.tmp.responses)
+                    fig.data.(fig.save.headers{i}) = fig.tmp.([fig.save.headers{i},'s']){j};
+%                 else
+%                     fig.data.response = fig.tmp.responses;
+%                 end
         end
         fig.tmp.data = fig.data.(fig.save.headers{i});
         fig.tmp.format = '%s';

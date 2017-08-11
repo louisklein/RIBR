@@ -25,7 +25,7 @@ function  louis_gui
 
 % making a figure
 fig.set.position = [.0 .0 1.0 1.0];
-fig.set.run_n = []; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
+fig.set.run_n = 2; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
 fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
 fig.set.item_duration_sec = 8;
@@ -34,6 +34,7 @@ fig.set.inter_stimulus_interval = 2;
 fig.set.phase_buffer = 6;
 fig.set.distractor_task = 240;
 fig.set.fr_timeout = 120;
+fig.set.rp_timeout = 16;
 fig.set.item_xy = [.5 .7];
 fig.set.quit_key = '9';
 
@@ -42,6 +43,7 @@ fig.set.test_time = 1;
 fig.set.get_inputs = 1;
 if fig.set.test_time
     fig.set.fr_timeout = 5;
+    fig.set.rp_timeout = 5;
     fig.set.run_n = 1;
     fig.set.item_duration_sec = 0.5;
     fig.set.inter_stimulus_interval = 0.5;
@@ -120,6 +122,7 @@ pause(fig.set.phase_buffer);
 fig.stim.list.use = fig.stim.rp.list.use;
 fig = runPhase2(fig,'phase_two');
 
+runInstructions(fig,'distractor');
 fig = runDistractor(fig,'distractor');
 pause(fig.set.phase_buffer);
 
@@ -177,9 +180,9 @@ fig.instruct.texts = {...
     {'In the first phase of the experiment you will be presented with a series of statements on the screen.',... % instruction 1: line 1
     'Each statement will appear for several seconds before disappearing, so it is important that you pay close attention.',... % instruction 1: line 2
     'You need to read each statement carefully while it is on the screen.'}... % instruction 1: line 3
-
+    
     {'You are now ready to start the experiment!'}... % instruction 2: line 1
-        };
+    };
 
 if exist('in_phase','var') && ~isempty(in_phase)
     switch in_phase
@@ -188,34 +191,34 @@ if exist('in_phase','var') && ~isempty(in_phase)
                 {'In the next phase of the experiment, you will be presented with some of the statements that you have already read.',...
                 'However, some parts will be blanked out.',...
                 'You need to remember what the statement should be and then type the entire statement into the textbox.'}...
-
+                
                 {'For example, if you saw the statement "all gungans are aliens" then it will appear to you as "all gu_____ are aliens".',...
-                'You will need to remember that the missing word is "gungans" and then type the entire statement with the missing word filled-in.',... 
+                'You will need to remember that the missing word is "gungans" and then type the entire statement with the missing word filled-in.',...
                 'That is to say, you should type the full sentence into the textbox, i.e., "all gungans are aliens".'}...
-
+                
                 {'You will only have a short time to type what you remember into the textbox, so be as quick as you can.',...
                 'Don''t worry if you accidentally make spelling errors, but do try to spell each statement correctly.',...
                 'When you feel ready, press the ''spacebar'' to begin the next phase...'}...
-                    };
-                
+                };
+            
             
         case 'phase_three'
             fig.instruct.texts = {...
                 {'In the final phase of the experiment, you will be presented with some different cues.',...
-                 'These cues will all be about the words you have already seen in the experiment today.',...
-                 'If you have already practised remembering "gungans", then could be presented with the cue "all _______ are aliens".'}...
-
-                {'For each cue, you need to remember as many of the related words as you can.',... 
-                 'So, if you were presented with the cue "all _______ are aliens", you might remember things like "gungans" and "klingons".',...
-                 'Just like in the previous phase, make sure you type the full statement into the textbox, i.e., "all klingons are aliens".',...
-                 'Each time you type a statement and hit ''return'', it will appear below the textbox so you can keep track of your answers.',...
-                 ''}...
-
+                'These cues will all be about the words you have already seen in the experiment today.',...
+                'If you have already practised remembering "gungans", then could be presented with the cue "all _______ are aliens".'}...
+                
+                {'For each cue, you need to remember as many of the related words as you can.',...
+                'So, if you were presented with the cue "all _______ are aliens", you might remember things like "gungans" and "klingons".',...
+                'Just like in the previous phase, make sure you type the full statement into the textbox, i.e., "all klingons are aliens".',...
+                'Each time you type a statement and hit ''return'', it will appear below the textbox so you can keep track of your answers.',...
+                ''}...
+                
                 {'You will only have a short time to remember as many correct statements as you can, so be quick and accurate!',...
-                 'Remember, only submit an answer if you''re sure that you''ve already seen it during an earlier phase.',...
-                 'When you feel ready, press the ''spacebar'' to begin the next phase...'}...
-                    };
-
+                'Remember, only submit an answer if you''re sure that you''ve already seen it during an earlier phase.',...
+                'When you feel ready, press the ''spacebar'' to begin the next phase...'}...
+                };
+            
         case 'distractor'
             fig.instruct.texts = {...
                 {'Well done! In the next phase of the experiment, you will be complete a task on the piece of paper next to your computer.',...
@@ -224,28 +227,28 @@ if exist('in_phase','var') && ~isempty(in_phase)
                 {'You will have 4 minutes in which to complete this task, so don''t dawdle.',...
                 'Once your time is up, you will hear a ''beep''.',...
                 'When you feel ready, press the ''spacebar'' and flip over your paper...'}...
-                    };
+                };
             
         case 'finish'
             fig.instruct.texts = {...
                 {'You''ve completed the experiment!',...
                 'Thank you for participating!'}...
-%                 'Please click on this link to activate the post-experimental survey.'},...
-                    };
+                %                 'Please click on this link to activate the post-experimental survey.'},...
+                };
             
     end
 end
 fig.instruct.text = [];
 fig.phase.running = 0;
 for i = 1 : numel(fig.instruct.texts)
-            
+    
     if i == numel(fig.instruct.texts)
         fig.instruct.continue = '';
     end
     fig.instruct.text{i} =  sprintf(...
         [repmat('%s\n\n',1,numel(fig.instruct.texts{1})),fig.instruct.continue_format],... % create formatting string
         fig.instruct.texts{i}{:},fig.instruct.continue);
-
+    
 end
 
 set(fig.h,'UserData',fig);
@@ -339,7 +342,8 @@ for i = 1 : fig.tmp.n
     
     fig.data.trial = i;
     phase_name = 'phase_two';
-    fig.data.stimulus = fig.stim.list.use{i};
+    fig.data.answer = fig.stim.list.use{i};
+    fig.data.stimulus = fig.data.answer; % needs to be tweaked - second word needs to be adjusted
     fig.data.reactiontime = -9999;
     fig.data.response = 'empty';
     fig.data.correct = 0;
@@ -362,7 +366,15 @@ for i = 1 : fig.tmp.n
     
     set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
-    while 1
+    fig.tmp.mentions_in_list = find(ismember(fig.stim.list.use,fig.data.answer));
+    
+    incorrect_response = 0;
+    feedback_given = 0;
+    response_given = 0;
+    if i > fig.tmp.mentions_in_list(1)
+        feedback_given = 1; % doesn't need to be given.
+    end
+    while toc < fig.set.rp_timeout && incorrect_response
         fig = get(fig.h,'UserData');
         if isfield(fig,'data')
             switch fig.data.response
@@ -371,15 +383,51 @@ for i = 1 : fig.tmp.n
                 case 'quit'
                     delete(fig.h);
                 otherwise
-                    if strcmpi(fig.data.response,fig.data.stimulus)
-                        fig.data.correct = 1;
+                    % validate response
+                    if numel(fig.data.response)
+                        if and(~incorrect_response,... % or hasn't timed out
+                                and(~isempty(strfind(fig.data.response,'all ')),...
+                                ~isempty(strfind(fig.data.response,' are ')))) ...
+                                || and(incorrect_response,strcmpi(fig.data.response,fig.data.answer))
+                            % and score response
+                            response_given = 1;
+                            if strcmpi(fig.data.response,fig.data.answer)
+                                fig.data.correct = 1;
+                            end
+                            if feedback_given
+                                break
+                            end
+                        else
+                            tic; % restart for wrong response
+                            fig.data.response = 'empty';
+                            set(fig.tmp.edit_box,'String','!!!');
+                        end
                     end
-                    break
             end
         end
         pause(.0001);
+        if toc >= fig.set.rp_timeout || response_given
+            incorrect_response = 1;
+            feedback_given = 1;
+            if i == fig.tmp.mentions_in_list(1)
+                % present the correct answer
+                text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
+                    fig.data.answer,...
+                    'Parent',gca,'Units','Normalized',...
+                    'HorizontalAlignment','center',...
+                    'BackgroundColor',fig.set.background_colour,...
+                    'Color',fig.col.black,...
+                    'FontSize',25,'FontName','Calibri');
+                
+            end
+        end
     end
-    fig.data.reactiontime = toc;
+    switch phase_name
+        case 'phase_two'
+            fig.data.reactiontime = toc;
+    end
+    
+    
     tic;
     % stop focusing on text box
     set(fig.tmp.edit_box,'Enable','off');
@@ -461,7 +509,7 @@ for i = 1 : fig.tmp.n
             delete(fig.data.text_handle(j));
         end
     end
-    fig.data.reactiontime = toc;
+    %     fig.data.reactiontime = toc;
     tic;
     
     set(fig.tmp.edit_box,'Enable','off','Visible','Off');
@@ -493,7 +541,7 @@ fig.set.phase_name = 'distractor';
 tic
 pause(fig.set.distractor_task);
 while toc < fig.set.distractor_task
-    playSnake(fig,'distractor');
+    playSnake(fig);%'distractor');
     try
         fig.set.distractor_task = toc;
     catch err
@@ -567,18 +615,21 @@ switch fig.phase.current
     case 'runPhase3'
         
         fprintf('Response:');
+        
         response = get(h,'String');
         set(h,'String',''); % clear the string
         drawnow;
         response_text = sprintf('''%s'' typed into box %i',response);
         fprintf('\t%s\n',response_text);
         fig.data.response = response;
-
+        
         if ~isfield(fig.data,'responses')
             fig.data.responses = [];
             fig.data.text_handle = [];
+            fig.data.reactiontimes = [];
         end
         fig.data.responses{end+1} = fig.data.response;
+        fig.data.reactiontimes{end+1} = toc;
         
         i = numel(fig.data.responses);
         fig.data.text_handle(i) = text(...
@@ -657,20 +708,25 @@ function fig = saveData(fig)
 fid = fopen(fig.save.fullfile,'a');
 fig.tmp.delim = '\t';
 
-fig.tmp.responses = fig.data.response;
+if ~iscell(fig.data.response)
+    fig.tmp.responses{1} = fig.data.response;
+    fig.tmp.reactiontimes{1} = fig.data.reactiontime;
+end
 if isfield(fig.data,'responses') && ~isempty(fig.data.responses)
     fig.tmp.responses = fig.data.responses;
+    fig.tmp.reactiontimes = fig.data.reactiontimes;
 end
+
 for j = 1 : numel(fig.tmp.responses)
     fig.tmp.delim = '\t';
     for i = 1 : numel(fig.save.headers)
         switch fig.save.headers{i}
-            case 'response'
-                if iscell(fig.tmp.responses)
-                    fig.data.response = fig.tmp.responses{j};
-                else
-                    fig.data.response = fig.tmp.responses;
-                end
+            case {'response','reactiontime'}
+                %                 if iscell(fig.tmp.responses)
+                fig.data.(fig.save.headers{i}) = fig.tmp.([fig.save.headers{i},'s']){j};
+                %                 else
+                %                     fig.data.response = fig.tmp.responses;
+                %                 end
         end
         fig.tmp.data = fig.data.(fig.save.headers{i});
         fig.tmp.format = '%s';

@@ -28,7 +28,7 @@ fig.set.position = [.0 .0 1.0 1.0];
 fig.set.run_n = 2; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
 fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
-fig.set.item_duration_sec = 8;
+fig.set.item_duration_sec = 6;
 fig.set.instruct_buffer = 2;
 fig.set.inter_stimulus_interval = 2;
 fig.set.phase_buffer = 6;
@@ -45,10 +45,10 @@ if fig.set.test_time
     fig.set.fr_timeout = 5;
     fig.set.rp_timeout = 5;
     fig.set.run_n = 1;
-    fig.set.item_duration_sec = 0.5;
-    fig.set.inter_stimulus_interval = 0.5;
-    fig.set.phase_buffer = 0.5;
-    fig.set.distractor_task = 0.5;
+    fig.set.item_duration_sec = 3;
+    fig.set.inter_stimulus_interval = 2;
+    fig.set.phase_buffer = 1;
+    fig.set.distractor_task = 30;
 end
 %% read in stim file
 
@@ -126,17 +126,15 @@ runInstructions(fig,'distractor');
 fig = runDistractor(fig,'distractor');
 pause(fig.set.phase_buffer);
 
-% runInstructions(fig,'distractor');
-% pause(fig.set.distractor_task)
-% beep
-% pause(fig.set.phase_buffer)
-
 % runs final phase instructions
-runInstructions(fig,'phase_three');
-pause(fig.set.phase_buffer);
-% runs final phase stimulus list
-fig.stim.list.use = fig.stim.fr.list.use;
-fig = runPhase3(fig,'phase_three');
+if ~fig.set.restart
+    runInstructions(fig,'phase_three');
+    pause(fig.set.phase_buffer);
+    % runs final phase stimulus list
+    fig.stim.list.use = fig.stim.fr.list.use;
+    fig = runPhase3(fig,'phase_three');
+% else pause()
+end
 
 % thanks participants and close program
 runInstructions(fig,'finish');
@@ -211,8 +209,7 @@ if exist('in_phase','var') && ~isempty(in_phase)
                 {'For each cue, you need to remember as many of the related words as you can.',...
                 'So, if you were presented with the cue "all _______ are aliens", you might remember things like "gungans" and "klingons".',...
                 'Just like in the previous phase, make sure you type the full statement into the textbox, i.e., "all klingons are aliens".',...
-                'Each time you type a statement and hit ''return'', it will appear below the textbox so you can keep track of your answers.',...
-                ''}...
+                'Each time you type a statement and hit ''return'', it will appear below the textbox so you can keep track of your answers.'}...
                 
                 {'You will only have a short time to remember as many correct statements as you can, so be quick and accurate!',...
                 'Remember, only submit an answer if you''re sure that you''ve already seen it during an earlier phase.',...
@@ -221,12 +218,14 @@ if exist('in_phase','var') && ~isempty(in_phase)
             
         case 'distractor'
             fig.instruct.texts = {...
-                {'Well done! In the next phase of the experiment, you will be complete a task on the piece of paper next to your computer.',...
-                'You need to use the pencil and the ruler to divide the shape in front of you into 3 equal parts using only straight lines.'}...
-                
-                {'You will have 4 minutes in which to complete this task, so don''t dawdle.',...
-                'Once your time is up, you will hear a ''beep''.',...
-                'When you feel ready, press the ''spacebar'' and flip over your paper...'}...
+                {'Well done! In the next phase of the experiment, you will be complete a perceptual motor task.',...
+                'When the task begins, you will see a ''snake'' that slithers around the screen.',...
+                'By using the keyboard arrows, you can control the direction of the snake and make it eat the boxes of ''food''.',...
+                'If you hit the walls or your snake''s own body, then it will be gameover, and you will need to try again.',...
+                'Your task is to feed the snake as many times as you can, in the fewest number of movements.'}...
+
+                {'This task will take a few minutes, so make sure that you try as many times as you can before the task ends.',...
+                'When you feel ready, press the ''spacebar'' to begin the next task...'}...
                 };
             
         case 'finish'
@@ -536,21 +535,27 @@ end
 
 function fig = runDistractor(fig,~)
 
-fig.set.phase_name = 'distractor';
-
 tic
-pause(fig.set.distractor_task);
+fig.set.restart = 1;
 while toc < fig.set.distractor_task
-    playSnake(fig);%'distractor');
-    try
-        fig.set.distractor_task = toc;
-    catch err
-        break
+    for i = 1:10
+        if fig.set.restart
+            playSnake(fig);
+            fig.set.restart = 0;
+        else
+            
+            break
+        end
     end
 end
 
-fig.phase.current = '';
+% tic
+% playSnake(fig);
+% while toc < fig.set.distractor_task
+%     return
+% end
 end
+
 
 
 %% readStimFile

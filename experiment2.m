@@ -1,33 +1,18 @@
-%% Louis' GUI to run his first experiment
-%
+%% Experiment2
 % date: 07-June-2017
 %
 % authors:
 % - Louis Klein
 % - Nic Badcock
-%
-% Aims:
-% - create figure window for experimental presentation
-% - give it 'hot key' functions
-% - make it save stuff
-% - demonstrate:
-%   * presenting text
-%   * deleting/removing text
-%   * edit box
-%   * button
-%   * read in data/csv stimulus file to display
 
-
-%% setup as a function
-
-function  louis_gui
+function  experiment2
 
 % clears the command window
 clc;
 close all
 
 % making a figure
-fig.set.position = [.0 .0 1.0 1.0];
+fig.set.position = [.0 .0 1.0 1.0]; % [.5 .5 .5 .5];
 fig.set.run_n = []; % add number here to test the phases with X number of trials - leave empty for real experiment (ie full lists)
 fig.col = myColours;
 fig.set.background_colour = fig.col.grey;
@@ -36,25 +21,25 @@ fig.set.instruct_buffer = 2;
 fig.set.inter_stimulus_interval = 2;
 fig.set.phase_buffer = 6;
 fig.set.distractor_task = 240;
-fig.set.fr_timeout = 120;
+fig.set.lj_timeout = 8;
 fig.set.rp_timeout = 16;
 fig.set.item_xy = [.5 .7]; % fig.set.item_xy = [.5 .7];
 fig.set.quit_key = '9';
 % logical to toggle running of difference sections - mostly for debugging
-fig.set.run_sections = [0 1 0 1]; % [one two distractor three]
-fig.set.feedback_reading_time = 5; % seconds
+fig.set.run_sections = [1 1 1 1]; % [one two distractor three]
+fig.set.feedback_reading_time = 3; % seconds
 
 % toggle test mode
-fig.set.test_time = 1;
-fig.set.get_inputs = 0;
+fig.set.test_time = 0;
+fig.set.get_inputs = 1;
 if fig.set.test_time
-    fig.set.fr_timeout = 5;
-    fig.set.rp_timeout = 10;
+    fig.set.lj_timeout = 10;
+    fig.set.rp_timeout = 20;
     fig.set.run_n = 3;
     fig.set.item_duration_sec = 1;
     fig.set.inter_stimulus_interval = 1;
     fig.set.phase_buffer = 1;
-    fig.set.distractor_task = 5;
+    fig.set.distractor_task = 20;
 end
 
 %% read in stim file
@@ -70,16 +55,17 @@ fig.stim.lp.file = 'Learning_Phase.csv';
 fig.stim.lp.fullfile = fullfile(fig.stim.dir,fig.stim.lp.file);
 fig = readStimFile(fig,'lp');
 
-fig.stim.fr.translation = 'final recall phase';
-fig.stim.fr.file = 'Final_Recall.csv';
-fig.stim.fr.fullfile = fullfile(fig.stim.dir,fig.stim.fr.file);
-fig = readStimFile(fig,'fr');
+fig.stim.lj.translation = 'believability phase';
+fig.stim.lj.file = 'Liking_Judgements.csv';
+fig.stim.lj.fullfile = fullfile(fig.stim.dir,fig.stim.lj.file);
+fig = readStimFile(fig,'lj');
 
 %% save settings
 
 fig = saveSetup(fig);
 
 % choose the list based on the participant id
+
 fig.stim.rp.fields = fields(fig.stim.rp.list);
 fig.stim.rp.n_list = mod(str2double(fig.save.code),numel(fig.stim.rp.fields))+1;
 fig.stim.rp.list.use = fig.stim.rp.list.(fig.stim.rp.fields{fig.stim.rp.n_list});
@@ -88,9 +74,9 @@ fig.stim.lp.fields = fields(fig.stim.lp.list);
 fig.stim.lp.n_list = ceil(fig.stim.rp.n_list/4);
 fig.stim.lp.list.use = fig.stim.lp.list.(fig.stim.lp.fields{fig.stim.lp.n_list});
 
-fig.stim.fr.fields = fields(fig.stim.fr.list);
-fig.stim.fr.n_list = 1;
-fig.stim.fr.list.use = fig.stim.fr.list.(fig.stim.fr.fields{fig.stim.fr.n_list});
+fig.stim.lj.fields = fields(fig.stim.lj.list);
+fig.stim.lj.n_list = ceil(fig.stim.rp.n_list/4);
+fig.stim.lj.list.use = fig.stim.lj.list.(fig.stim.lj.fields{fig.stim.lj.n_list});
 
 fig.h = figure(...
     'Units','Normalized',...
@@ -149,7 +135,7 @@ if fig.set.run_sections(4)
     pause(fig.set.phase_buffer);
     % runs final phase stimulus list
     fig.set.item_xy = [.5 .7];
-    fig.stim.list.use = fig.stim.fr.list.use;
+    fig.stim.list.use = fig.stim.lj.list.use;
     
     fig = runPhase3(fig,'phase_three');
     % else pause()
@@ -162,7 +148,6 @@ delete(fig.h);
 end
 
 %% myColours
-% - list of colours I might want to use
 
 function col = myColours
 col.black = [.1 .1 .1];
@@ -194,7 +179,7 @@ fig.tmp.stack = dbstack;
 fig.phase.current = fig.tmp.stack(1).name;
 
 fig.instruct.continue = 'Press ''Space Bar'' to continue.';
-fig.instruct.continue_format = '\n%s';
+fig.instruct.continue_format = '\n%s\n';
 fig.instruct.texts = {...
     {'In the first phase of the experiment you will be presented with a series of statements on the screen.',... % instruction 1: line 1
     'Each statement will appear for several seconds before disappearing, so it is important that you pay close attention.',... % instruction 1: line 2
@@ -217,23 +202,33 @@ if exist('in_phase','var') && ~isempty(in_phase)
                 
                 {'You will only have a short time to type what you remember into the textbox, so be as quick as you can.',...
                 'Don''t worry if you accidentally make spelling errors, but do try to spell each statement correctly.',...
+                '',...
                 'When you feel ready, press the ''spacebar'' to begin the task...'}...
                 };
             
             
         case 'phase_three'
             fig.instruct.texts = {...
-                {'In the final phase of the experiment, you will be presented with some different cues.',...
-                'These cues will all be about the words you have already seen in the experiment today.',...
-                'If you have already practised remembering "gungans", then could be presented with the cue "all _______ are aliens".'}...
+                {'In the final phase of the experiment, you will be presented with a number of the statements you may have already seen today.',...
+                'For each statement, you will need to decide how much you like or dislike it. To do this type a number into the textbox.',...
+                'But you will only have a few seconds in which to make each judgement, so be quick!'}...
                 
-                {'For each cue, you need to remember as many of the related words as you can.',...
-                'So, if you were presented with the cue "all _______ are aliens", you might remember things like "gungans" and "klingons".',...
-                'Just like in the previous phase, make sure you type the full statement into the textbox, i.e., "all klingons are aliens".',...
-                'Each time you type a statement and hit ''return'', it will appear below the textbox so you can keep track of your answers.'}...
+                {'Please read each statement carefully, and indicate how much you like it on the following scale from 1 to 6.'...
+                '',...
+                '1 = dislike it very much',...
+                '2 = dislike it quite a bit',...
+                '3 = dislike it somewhat',...
+                '4 = like it somewhat',...
+                '5 = like it quite a bit',...
+                '6 = like it very much',...
+                ''}...
                 
-                {'You will only have a short time to remember as many correct statements as you can, so be quick and accurate!',...
-                'Remember, only submit an answer if you''re sure that you''ve already seen it during an earlier phase.',...
+                {'When you make the liking judgment, please focus on your feeling about the statement.',...
+                'Do not think about why you like or dislike the statement, just go with your intuition and gut-feelings.',...
+                'Please try to use the full extent of the scale (so use all possible values from 1 to 6).',...
+                'Just remember, you only have a few seconds to decide how much you like them and enter a number.'...
+                'You must press the ENTER key after rating each sentence to submit your answer!'...
+                '',...
                 'When you feel ready, press the ''spacebar'' to begin the task...'}...
                 };
             
@@ -246,6 +241,7 @@ if exist('in_phase','var') && ~isempty(in_phase)
                 'Your task is to feed the snake as many times as you can, in the fewest number of movements.'}...
                 
                 {'This task will take a few minutes, so make sure that you try as many times as you can before the task ends.',...
+                '',...
                 'When you feel ready, press the ''spacebar'' to begin the task...'}...
                 };
             
@@ -267,7 +263,7 @@ for i = 1 : numel(fig.instruct.texts)
     end
     
     fig.instruct.text{i} =  sprintf(...
-        [repmat('%s\n\n',1,numel(fig.instruct.texts{1})),fig.instruct.continue_format],... % create formatting string
+        [repmat('\n %s \n',1,numel(fig.instruct.texts{1})),fig.instruct.continue_format],... % create formatting string
         fig.instruct.texts{i}{:},fig.instruct.continue);
     
 end
@@ -396,6 +392,7 @@ for i = 1 : fig.tmp.n
     
     set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
+    
     fig.tmp.mentions_in_list = find(ismember(fig.stim.list.use,fig.data.answer));
     
     response_complete = 0; % previously (21-Aug-2017) 'incorrect_response'
@@ -421,7 +418,7 @@ for i = 1 : fig.tmp.n
                         delete(fig.h);
                     otherwise
                         % validate response
-                        fprintf('Checking response...\n');
+                        % fprintf('Checking response...\n');
                         if numel(fig.data.response)
                             textbox_instruction = 0;
                             if and(~response_complete,... % or hasn't timed out
@@ -440,6 +437,7 @@ for i = 1 : fig.tmp.n
                                 % need to give feedback for the first
                                 % appearance of an item
                                 if feedback_given
+                                    set(fig.tmp.edit_box,'Enable','off');
                                     pause(fig.set.feedback_reading_time) % adjust this for reading time
                                     break
                                 end
@@ -452,22 +450,36 @@ for i = 1 : fig.tmp.n
                                 end
                             end
                             if textbox_instruction
-                                tic; % restart for wrong response
-                                % do we really want to reset the timer?
+                                
                                 fprintf('Incorrect response format - retype\n');
                                 fig.data.response = 'empty';
                                 set(fig.h,'UserData',fig);
-                                set(fig.tmp.edit_box,'String','please type the full sentence');
+                                fig.data.full_text = 'please type the full sentence';
+                                
+                                fig.data.full_sentence = text(...
+                                    .5,.3-.05,fig.data.full_text,...
+                                    'HorizontalAlignment','center',...
+                                    'Color',fig.col.black,...
+                                    'FontSize',20,'FontName','Calibri');
+                                sprintf('%s',fig.data.full_sentence)
+                                set(fig.tmp.edit_box,'String','');
+                                % set(fig.tmp.edit_box,'String','please type the full sentence');
+                                
+                                pause(fig.set.feedback_reading_time)
+                                set(fig.data.full_sentence,'String','');
                                 uicontrol(fig.tmp.edit_box); % set focus to?
+                                tic; % restart for wrong response
+                                
                             end
                         end
                 end
                 
                 if response_timedout || response_given % timed out or response given
-%                     fprintf('\tTimed out or response given\n');
-                    %                     feedback_given = 1; % assume response has been given even if timed-out... probably
+                    %                     fprintf('\tTimed out or response given\n');
+                    % feedback_given = 1; % assume response has been given even if timed-out... probably
                     % If it's the first mention of the item:
                     if i == fig.tmp.mentions_in_list(1)
+                        
                         if ~feedback_given
                             feedback_given = 1;
                             % present the correct answer
@@ -486,11 +498,23 @@ for i = 1 : fig.tmp.n
                                 % reset response_complete - need to complete the loop
                                 fig.data.response = 'empty';
                                 set(fig.h,'UserData',fig);
-%                                 response_complete = 0;
+                                % response_complete = 0;
                                 % people need to type the correct response
-                                set(fig.tmp.edit_box,'String','please type the correct response');
-                                %                             set(fig.tmp.edit_box,'Enable','Off');
-                                %                             set(fig.tmp.edit_box,'Enable','On');
+                                
+                                fig.data.fix_text = 'please type the correct response';
+                                fig.data.fix_sentence = text(...
+                                    .5,.3-.05,fig.data.fix_text,...
+                                    'HorizontalAlignment','center',...
+                                    'Color',fig.col.black,...
+                                    'FontSize',20,'FontName','Calibri');
+                                sprintf('%s',fig.data.fix_sentence)
+                                set(fig.tmp.edit_box,'String','');
+                                
+                                pause(fig.set.feedback_reading_time)
+                                set(fig.data.fix_sentence,'String','');
+                                uicontrol(fig.tmp.edit_box); % set focus to?
+                                tic; % restart for wrong response
+                                
                             end
                         end
                         if fig.data.correct
@@ -529,10 +553,10 @@ for i = 1 : fig.tmp.n
         set(text_handle2,'String','');
         %         delete(text_handle2);
     end
+    
     set(fig.tmp.edit_box,'String','');
     % save the data
     fig = saveData(fig);
-    
     
     switch phase_name
         case 'phase_two'
@@ -549,7 +573,7 @@ fig.phase.current = '';
 end
 
 %% runPhase3
-
+% clear uicontrol string between stimuli?
 function fig = runPhase3(fig,phase_name)
 
 fig.tmp.stack = dbstack;
@@ -560,21 +584,24 @@ set(fig.tmp.edit_box,'Visible','on');
 fig.data.code = fig.save.code;
 fig.data.phase = phase_name;
 fig.data.phase_three_responses = [];
+fig.lj.possible_ratings = '123456';
 
 fig.tmp.n = numel(fig.stim.list.use);
 if ~isempty(fig.set.run_n)
     fig.tmp.n = fig.set.run_n;
 end
 for i = 1 : fig.tmp.n
-    fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     
+    fprintf('\t (%s) %i: %s\n',phase_name,i,fig.stim.list.use{i});
     fig.data.trial = i;
     phase_name = 'phase_three';
     fig.data.stimulus = fig.stim.list.use{i};
     fig.data.reactiontime = -9999;
     fig.data.response = 'empty';
     fig.data.correct = 0;
+    response_complete = 0;
     set(fig.h,'UserData',fig);
+    
     try
         tic;
         text_handle = text(fig.set.item_xy(1),fig.set.item_xy(2),...
@@ -591,38 +618,64 @@ for i = 1 : fig.tmp.n
     
     set(fig.tmp.edit_box,'Visible','On','Enable','on');
     uicontrol(fig.tmp.edit_box);
-    if isfield(fig.data,'responses')
-        fig.data = rmfield(fig.data,'responses');
-    end
-    set(fig.h,'UserData',fig);
-    while toc < fig.set.fr_timeout
-        pause(.0001);
-    end
-    fig = get(fig.h,'UserData');
-    if isfield(fig.data,'text_handle')
-        for j = 1 : numel(fig.data.text_handle)
-            delete(fig.data.text_handle(j));
+    
+    while ~response_complete
+        pause(.001);
+        fig = get(fig.h,'UserData');
+        if isfield(fig,'data')
+            switch fig.data.response
+                case 'empty'
+                    fprintf('%i: waiting...\n',i);
+                otherwise
+                    if ~isempty(strfind(fig.lj.possible_ratings,fig.data.response))
+                        response_complete = 1;
+                        set(fig.tmp.edit_box,'Enable','off','Visible','Off');
+                        fprintf('%s \n','checked correct number range');
+                    else
+                        fig.data.number_text = 'please type a number between 1 and 6';
+                        fig.data.please_number = text(...
+                            .5,.3-.05,fig.data.number_text,...
+                            'HorizontalAlignment','center',...
+                            'Color',fig.col.black,...
+                            'FontSize',20,'FontName','Calibri');
+                        sprintf('%s',fig.data.please_number)
+                        pause(fig.set.feedback_reading_time);
+                        set(fig.data.please_number,'String','');
+                        fprintf('%s \n','presented number text');
+                        % reset the response
+                        fig.data.response = 'empty';
+                    end
+            end
         end
-    end
-    tic;
-    
-    set(fig.tmp.edit_box,'Enable','off','Visible','Off');
-    delete(text_handle);
-    
-    % save the data
-    fig = saveData(fig);
-    
-    
-    switch phase_name
-        case 'phase_three'
-            fig.data.phase_three_responses{end+1} = fig.data.response;
-    end
-    while toc < fig.set.inter_stimulus_interval
         
-        pause(.0001);
-    end
+        %         if isfield(fig.data,'responses')
+        %             fig.data = rmfield(fig.data,'responses');
+        %         end
+        
+        set(fig.h,'UserData',fig);
+        
+        fig = get(fig.h,'UserData');
+        if isfield(fig.data,'text_handle')
+            for j = 1 : numel(fig.data.text_handle)
+                set(fig.data.text_handle(j),'String','');
+            end
+        end
+        
+        
+        
+        % save the data
+        fig = saveData(fig);
+        switch phase_name
+            case 'phase_three'
+                fig.data.phase_three_responses{end+1} = fig.data.response;
+        end
+        
+        while toc < fig.set.inter_stimulus_interval
+            pause(.01);
+        end
+    end  
+    delete(text_handle);
 end
-
 fig.phase.current = '';
 end
 
@@ -666,7 +719,7 @@ switch phase
         while ~strcmpi(fig.stim.(phase).headers{1}(1),'F')
             fig.stim.(phase).headers{1}(1) = [];
         end
-    case 'fr'
+    case 'lj'
         while ~strcmpi(fig.stim.(phase).headers{1}(1),'F')
             fig.stim.(phase).headers{1}(1) = [];
         end
@@ -705,7 +758,6 @@ switch fig.phase.current
     case 'runPhase3'
         
         fprintf('Response:');
-        
         response = get(h,'String');
         set(h,'String',''); % clear the string
         drawnow;
@@ -718,19 +770,20 @@ switch fig.phase.current
             fig.data.text_handle = [];
             fig.data.reactiontimes = [];
         end
+        
         fig.data.responses{end+1} = fig.data.response;
         fig.data.reactiontimes{end+1} = toc;
         
-        i = numel(fig.data.responses);
-        fig.data.text_handle(i) = text(...
-            .5,.3-.05*(i-1),fig.data.responses{i},...
-            'HorizontalAlignment','center',...
-            'Color',fig.col.black,...
-            'FontSize',20,'FontName','Calibri');
-        set(gca,'Visible','off');
-        sprintf('\t%s\n',response_text);
+        % i = numel(fig.data.responses);
+        %         fig.data.text_handle(i) = text(...
+        %             .5,.3-.05*(i-1),fig.data.responses{i},...
+        %             'HorizontalAlignment','center',...
+        %             'Color',fig.col.black,...
+        %             'FontSize',20,'FontName','Calibri');
+        %         set(gca,'Visible','off');
+        %         sprintf('\t%s\n',response_text);
+        %         drawnow;
         
-        drawnow;
         set(gcf,'UserData',fig);
 end
 end

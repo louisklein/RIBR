@@ -1,6 +1,6 @@
-# RIBR Research Toolkit: jsPsych Plugins for RIF and RIBR
+# RIBR Research Toolkit
 
-This repository contains custom jsPsych plugins developed for conducting Retrieval-Induced Forgetting (RIF) and Retrieval-Induced Belief Revision (RIBR) experiments. The toolkit has been used across 7 experiments investigating how selective retrieval practice influences memory and belief systems.
+This repository contains custom jsPsych plugins developed for conducting **Retrieval-Induced Forgetting (RIF)** and **Retrieval-Induced Belief Revision (RIBR)** experimental designs. The toolkit has been used across 7 experiments investigating how selective retrieval practice influences memory and belief systems.
 
 **Co-developed with Becky Gilbert**, the core innovation is a single plugin that can measure memory interference (RIF) or belief revision (RIBR) depending on configuration.
 
@@ -204,7 +204,7 @@ var free_recall = {
 
 **Developed by**: Louis Klein and Becky Gilbert  (github@becky-gilbert)
 
-**License**: Open source for research use
+**License**: Open source for research use, but please ensure you cite our work when you use it alongside the core jsPsych library
 
 **Citation**:
 

@@ -203,7 +203,9 @@ var free_recall = {
 ---
 
 **Developed by**: Louis Klein and Becky Gilbert  (github@becky-gilbert)
+
 **License**: Open source for research use
+
 **Citation**:
 
 Klein, L., & Gilbert, R. (2025). jsPsych plugin for recall tasks (Version 3.0) [Computer software]. _GitHub_. https://github.com/louisklein/RIBR

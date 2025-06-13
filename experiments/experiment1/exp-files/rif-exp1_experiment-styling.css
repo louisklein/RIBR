@@ -1,0 +1,125 @@
+/* formatting for learning, retrieval, and like judgment stimulus text */
+.retrieval-stim,
+.learning-stim,
+.cued-recall-stim,
+.like-judgment-stim {
+  font-family: Calibri, sans-serif;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+/* .learning-stim, .like-judgment-stim {
+  color: DimGrey;
+  opacity: 0.3;
+} */
+
+/* formatting for response box text in the retrieval phase (.jspsych-cued-recall-response) 
+and like judgment phase (#jspsych-survey-text-validation-form) */
+.jspsych-cued-recall-response, #jspsych-survey-text-validation-form #input-0 {
+  font-size: 25px;
+  text-align: center;
+  padding: 4px 4px;
+}
+
+/* formatting for distractor task digit stimuli */
+.distractor-stim {
+  font-family: Calibri, sans-serif;
+  font-size: 80px;
+  font-weight: bold;
+}
+
+.distractor-timeout-msg {
+  color: red;
+}
+
+/* left and right positioning for span elements */
+.left {
+  display: inline-block;
+  transform: translate(-70%, 0px);
+}
+.right {
+  display: inline-block;
+  transform: translate(70%, 0px);
+}
+
+/* class to move prompt text above distractor stimulus */
+.top {
+  position: relative;
+  top: -120px;
+}
+
+/* formatting for the bounding box for instructions text */
+.instruction-box {
+  border: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  height: 200px;
+  font-size: 22px;
+  line-height: 1.5;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center; /* if `center` then lines will type 'outward' from center; if `left` it will type without shifting lines */
+  box-sizing: border-box;
+  background-color: transparent;
+}
+
+.instruction-box > *:not(:last-child) {
+  padding-bottom: 10px;
+}
+
+/* Styling for the response list */
+.response-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Styling for individual response columns */
+.response-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 20px; /* Space between columns */
+}
+
+/* Styling for individual responses */
+.response-item {
+  font-size: 30px; /* Larger font size */
+  margin-bottom: 25px; /* Space between responses */
+}
+
+/* Ensure the mistake message is clearly visible below the responses */
+#jspsych-cued-recall-mistake {
+/*    margin-top: 20px;*/
+    font-size: 20px; /* Adjust font size as needed */
+    text-align: center;
+    color: red;
+}
+
+/* Adjust the response list container to have sufficient bottom margin */
+#jspsych-cued-recall-print-responses {
+    margin-bottom: 20px; /* Space below the responses */
+    overflow: hidden; /* Ensure the container expands to contain floated elements */
+}
+
+/* Clear floats after the columns */
+#jspsych-cued-recall-print-responses::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+#free-recall-instruction {
+  margin-top: 0;
+  padding-top: 10px;
+  padding-bottom: 30px;
+}

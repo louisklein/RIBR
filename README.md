@@ -2,11 +2,7 @@
 
 This repository contains custom jsPsych plugins developed for conducting Retrieval-Induced Forgetting (RIF) and Retrieval-Induced Belief Revision (RIBR) experiments. The toolkit has been used across 7 experiments investigating how selective retrieval practice influences memory and belief systems.
 
-Developed across 7 experiments investigating how selective memory retrieval influences both forgetting and belief change. The core innovation is a single plugin that can measure memory interference (RIF) or belief revision (RIBR) depending on configuration.
-
-## Cued Recall Plugin
-
-**Co-developed with Becky Gilbert**, this plugin represents a major advancement over standard jsPsych recall plugins, enabling sophisticated retrieval practice experiments with advanced validation and feedback systems.
+**Co-developed with Becky Gilbert**, the core innovation is a single plugin that can measure memory interference (RIF) or belief revision (RIBR) depending on configuration.
 
 ### Built-in Error Detection
 
@@ -72,7 +68,7 @@ Different experiments need different answer criteria. RIF studies typically acce
 
 ### String Similarity Scoring
 
-Spelling errors shouldn't invalidate otherwise correct responses. We implemented Levenshtein distance calculation to score partial matches. The `similarity_threshold` parameter controls tolerance:
+Spelling errors shouldn't invalidate otherwise correct responses. We implemented a flexible Levenshtein distance calculation to score partial matches. The `similarity_threshold` parameter controls tolerance:
 
 ```javascript
 {
@@ -98,11 +94,11 @@ Free recall experiments need to collect multiple responses while preventing dupl
 }
 ```
 
-Responses automatically organise into columns as participants submit them, providing clear visual feedback about their progress.
+Responses automatically organise into columns as participants submit them, providing clear visual feedback about their progress. The number of columns can be explicitly set but it will wrap into multiple columns by default when previous responses hit the edge of the viewport. Alternatively, previous responses can be set to fade out of view after time-out or the list of previous responses reaches a count of _n_.
 
 ## Instructions Plugin with Animated Text
 
-The standard jsPsych instructions plugin appears instantly, which can feel abrupt and by presenting information all at once, may allow students to skim-read or skip-over instructions. To address this, we added a 'typewriter' animation because it creates a potentially more engaging experience while maintaining experimental control over timing and presentation.
+The standard jsPsych instructions plugin appears instantly, which can feel abrupt and by presenting information all at once, may allow students to skim-read or skip-over instructions. To address this, we added a 'typewriter' animation because it creates a potentially more engaging experience while maintaining experimental control over timing and presentation. The animation plugin works well with the recall plugin, but is not necessary.
 
 The animation engine preserves HTML formatting while rendering character-by-character:
 
@@ -115,7 +111,7 @@ The animation engine preserves HTML formatting while rendering character-by-char
 }
 ```
 
-A cute side-effect of the way we implemented the animation is that emboldened text or linebreaks induce a little delay (because underneath the hood, markdown syntax is being parsed) that breaks-up the animation flow and adds to overall reading engagement.
+A cute side-effect of the way we implemented the animation is that emboldened text or linebreaks induce a little delay (because underneath the hood, markdown syntax is being parsed) that breaks-up the animation flow and adds to overall reading engagement. The animation system also handles edge cases like participants pressing keys during typewriter rendering by queuing navigation events until animation completes.
 
 ## Technical Implementation
 
@@ -138,7 +134,7 @@ function calculateSimilarity(str1, str2) {
 
 ### Data Output Structure
 
-The plugin captures detailed response metadata for advanced analysis:
+The plugin captures error type metadata for potential analysis:
 
 ```json
 {
@@ -158,7 +154,7 @@ The plugin captures detailed response metadata for advanced analysis:
 
 ### Browser Compatibility
 
-All functionality uses vanilla JavaScript (ES6+) without external dependencies. The animation system handles edge cases like participants pressing keys during typewriter rendering by queuing navigation events until animation completes.
+All functionality uses vanilla JavaScript (ES6+) without external dependencies but it currently optimised for use with jsPsych version 6.2. Limited testing and support has occurred for jsPsych versions >7.0.
 
 ## Configuration Examples
 
@@ -203,15 +199,10 @@ var free_recall = {
 - `jspsych-recall-plugin_v3.js` - Advanced cued recall with validation
 - `jspsych-instructions-plugin_v2.js` - Instructions with typewriter animation  
 - `experiment-styling.css` - Consistent visual formatting
-- Example experiments demonstrating RIF and RIBR configurations
-
-## Getting Started
-
-Include the plugin files in your jsPsych experiment and configure validation parameters appropriate for your research paradigm. The plugins maintain full compatibility with standard jsPsych features while adding advanced capabilities for sophisticated memory research.
 
 ---
 
-**Developed by**: Louis Klein in collaboration with Becky Gilbert  
+**Developed by**: Louis Klein and Becky Gilbert  (github@becky-gilbert)
 **License**: Open source for research use
 **Citation**:
 
